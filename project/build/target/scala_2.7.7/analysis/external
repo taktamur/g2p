@@ -1,0 +1,5 @@
+#External Dependencies
+#Sun Apr 04 10:37:41 JST 2010
+/Users/tak/proj/g2p/project/boot/scala-2.7.7/org.scala-tools.sbt/sbt/0.7.0/sbt_2.7.7-0.7.0.jar=MyProject.scala
+/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Classes/classes.jar=MyProject.scala
+/Users/tak/proj/g2p/project/boot/scala-2.7.7/lib/scala-library.jar=MyProject.scala

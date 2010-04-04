@@ -1,0 +1,15 @@
+googlereader.url=http://www.google.com/reader/shared/##USERID##
+
+posterous.post.mailto=private@posterous.com
+#posterous.post.mailto=post@posterous.com
+posterous.auth.usermail=##YOUR_POSTEROUS_MAILADDRESS##
+posterous.auth.password=##YOUR_POSTEROUS_PASSWORD##
+
+
+mailer.gmail.user=##YOUR_GMAIL_MAILADDRESS##
+mailer.gmail.password=##YOUR_GMAIL_PASSWORD##
+
+mailer.gmail.smtp.host=smtp.gmail.com
+mailer.gmail.smtp.port=587
+mailer.gmail.smtp.auth=true
+mailer.gmail.smtp.starttls.enable=true
