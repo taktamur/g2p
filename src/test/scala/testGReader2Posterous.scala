@@ -25,6 +25,11 @@ class G2PSuite extends FunSuite {
     
     true;
   }
+  test("RSSFeed test2"){
+    val r = new RSSFeed("http://www.google.com/reader/public/atom/user%2F02442664282021633674%2Fstate%2Fcom.google%2Fbroadcast")
+    r.getEntries.foreach( e => println(e.firstImageTag() ))
+    true
+  }
   test("Entry test."){
 
     assert(e.title == "読者の“目”が制御するeブックリーダーText 2.0, 狂気かそれとも天才の作品か？ - TechCrunch Japan","title test failed.title="+e.title)
@@ -32,11 +37,14 @@ class G2PSuite extends FunSuite {
     assert(e.link() == "http://www.pheedo.jp/click.phdo?i=52aa9ccc91a00dfb9d2ecb7ea8e69b48")
   }
   test("convert2Posteous test."){
-    val ok = """<div class="posterous_bookmarklet_entry">
-<blockquote class="posterous_long_quote">このシステムは(HTML部分)</blockquote>
-<div class="posterous_quote_citation">via <a href="http://www.pheedo.jp/click.phdo?i=52aa9ccc91a00dfb9d2ecb7ea8e69b48">読者の“目”が制御するeブックリーダーText 2.0, 狂気かそれとも天才の作品か？ - TechCrunch Japan</a></div>
-</div>"""
-    assert( ok == Convert.toPosterous(e) )
+    val ok = """<div class="posterous_bookmarklet_entry"><blockquote class="posterous_long_quote">このシステムは(HTML部分)</blockquote><div class="posterous_quote_citation">via <a href="http://www.pheedo.jp/click.phdo?i=52aa9ccc91a00dfb9d2ecb7ea8e69b48">読者の“目”が制御するeブックリーダーText 2.0, 狂気かそれとも天才の作品か？ - TechCrunch Japan</a></div></div>"""
+    val c1 =(new Convert("##BQ##")) 
+    assert( c1.toPosterous(e) == "このシステムは(HTML部分)", "BQ replace")
+    assert( (new Convert("##URL##")).toPosterous(e) == "http://www.pheedo.jp/click.phdo?i=52aa9ccc91a00dfb9d2ecb7ea8e69b48", "URL replace")
+    assert( (new Convert("##TITLE##")).toPosterous(e) == """読者の“目”が制御するeブックリーダーText 2.0, 狂気かそれとも天才の作品か？ - TechCrunch Japan""", "title replace")
+
+  val c = new Convert("""<div class="posterous_bookmarklet_entry"><blockquote class="posterous_long_quote">##BQ##</blockquote><div class="posterous_quote_citation">via <a href="##URL##">##TITLE##</a></div></div>""")
+    assert( ok == c.toPosterous(e),"ok result="+c.toPosterous(e) )
   }
 
   test("1 post to gmail"){
@@ -83,5 +91,10 @@ class G2PSuite extends FunSuite {
     assert(dates.filter(_.getTime() > now.getTime()-60*60*1000).size == 4, "１時間前の検出")
     true
   }
+
+  test("画像テスト"){
+    true
+  }
+
 
 }

@@ -5,6 +5,7 @@ import scala.xml.parsing.{ConstructingParser,XhtmlParser}
 import java.util.Properties
 import java.io._
 import java.util.Date
+import taktamur.implicitConvert.xmlloader;   //"".xml の暗黙の型変換
 
 class Posterous(p:Properties){
   import java.net.{Authenticator,  PasswordAuthentication}
@@ -16,18 +17,12 @@ class Posterous(p:Properties){
         new PasswordAuthentication( user, pass.toCharArray)
       }
     )
-  val site=  XML.loadString( Source.fromURL("http://posterous.com/api/getsites","UTF-8").getLines.mkString)
+  val site=  "http://posterous.com/api/getsites".xml
 
-  def siteID():String ={
-    (site \\ "id").toList.first.text
-  }
+  def siteID():String = (site \\ "id").toList.first.text
 
-  def titles():List[String] ={
-    val url = "http://posterous.com/api/readposts?num_posts=50&site_id=" + siteID
-    val site = XML.loadString( Source.fromURL(url,"UTF-8").getLines.mkString)
-    val titles:List[String] = (site \\ "post" \ "title").toList.map(t => t.text)
-    titles
-  }    
+  val posts = ("http://posterous.com/api/readposts?num_posts=50&site_id=" + siteID).xml
+  val titles:List[String] = (posts \\ "post" \ "title").toList.map(t => t.text)
 }
 
 
@@ -48,8 +43,7 @@ class GoogleReader(u:String){
 class RSSFeed(u:String){
   val url:String = u;
   def getEntries():List[Entry] = {
-    val src = scala.io.Source.fromURL(url,"UTF-8").getLines.mkString
-    val elem = XML.loadString(src)
+    val elem = url.xml
     (elem \\ "feed" \ "entry").toList.map(e => new Entry(e.toString))
   }
 }
@@ -78,6 +72,18 @@ class Entry(v:String){
   val s = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
   s.setTimeZone(TimeZone.getTimeZone("GMT"))
   def published():Date = s.parse(( e \ "published").first.text)
+
+  def firstImageTag():String = {
+    val dt = """.*(<img .*?>).*""".r
+    val contents = (e \\ "content").text
+    val t = dt.findFirstIn(contents)
+    if( t == None ){
+      ""
+    }else{
+      val dt(img) = t match {case Some(x)=>x;  case _ => ""}
+      img
+    }
+  }
 }
 
 // fixme 使いにくいクラス
@@ -112,17 +118,16 @@ class PostLog(p:Properties){
 }
 
 // fixme imgもあればそれを追加する
-object Convert{
+class Convert(template:String){
   def toPosterous(e:Entry):String = {
-    """<div class="posterous_bookmarklet_entry">
-<blockquote class="posterous_long_quote">##BQ##</blockquote>
-<div class="posterous_quote_citation">via <a href="##URL##">##TITLE##</a></div>
-</div>""".replace("##BQ##",e.annotation()).replace("##URL##",e.link()).replace("##TITLE##",e.title())
-
+    template.replace("##BQ##",e.annotation()).
+      replace("##URL##",e.link()).
+      replace("##TITLE##",e.title()).
+      replace("##FIRSTIMG##",e.firstImageTag())
   }
 }
 
-// fixme GoogleReaderの日付に合わせる
+
 object main extends Application{
   val p = new Properties()
   p.load(new FileInputStream("./g2p.properties") )
@@ -134,9 +139,10 @@ object main extends Application{
     .filter(_.annotation().length()!=0)
     .filter(_.published.getTime() > now.getTime()-60*60*1000)
 println("send posts. count="+posts.size)
+  val c = new Convert("""<div class="posterous_bookmarklet_entry"><blockquote class="posterous_long_quote">##FIRSTIMG## ##BQ##</blockquote><div class="posterous_quote_citation">via <a href="##URL##">##TITLE##</a> share from googlereader</div></div>""")
   val mailler = Mailler.build(p)
   val postto = p.getProperty("posterous.post.mailto")
   posts.foreach( post => {
-    mailler.send(postto, post.title, Convert.toPosterous(post))
+    mailler.send(postto, post.title, c.toPosterous(post))
   });
 }
