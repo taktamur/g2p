@@ -84,6 +84,7 @@ class Entry(v:String){
       img
     }
   }
+  def id():String = (e \ "id").first.text;
 }
 
 // fixme 使いにくいクラス
@@ -110,12 +111,6 @@ class GMailler(p:Properties) extends Sender{
   }
 }
 }
-class PostLog(p:Properties){
-  val posterous = new Posterous(p)
-  val posted:List[String] = posterous.titles
-
-  def isNonPosted(t:String):Boolean = !posted.contains(t)
-}
 
 // fixme imgもあればそれを追加する
 class Convert(template:String){
@@ -131,18 +126,19 @@ class Convert(template:String){
 object main extends Application{
   val p = new Properties()
   p.load(new FileInputStream("./g2p.properties") )
-  val pl = new PostLog(p)
+  val pl = new PostLog4SQLite()
   val g = new GoogleReader(p.getProperty("googlereader.url"))
   val now = new Date()
   val posts:List[Entry] = g.getRSSFeed().getEntries()
-    .filter(p => pl.isNonPosted(p.title) )
+    .filter(p => pl.isNotPosted(p.id) )
     .filter(_.annotation().length()!=0)
     .filter(_.published.getTime() > now.getTime()-60*60*1000)
 println("send posts. count="+posts.size)
-  val c = new Convert("""<div class="posterous_bookmarklet_entry"><blockquote class="posterous_long_quote">##FIRSTIMG## ##BQ##</blockquote><div class="posterous_quote_citation">via <a href="##URL##">##TITLE##</a> share from googlereader</div></div>""")
+  val c = new Convert("""<div class="posterous_bookmarklet_entry"><blockquote class="posterous_long_quote">##FIRSTIMG##<br/> ##BQ##</blockquote><div class="posterous_quote_citation">via <a href="##URL##">##TITLE##</a> share from googlereader</div></div>""")
   val mailler = Mailler.build(p)
   val postto = p.getProperty("posterous.post.mailto")
   posts.foreach( post => {
     mailler.send(postto, post.title, c.toPosterous(post))
+    pl.addId(post.id)
   });
 }
