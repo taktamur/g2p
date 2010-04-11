@@ -134,7 +134,7 @@ object main extends Application{
     .filter(_.annotation().length()!=0)
     .filter(_.published.getTime() > now.getTime()-60*60*1000)
 println("send posts. count="+posts.size)
-  val c = new Convert("""<div class="posterous_bookmarklet_entry"><blockquote class="posterous_long_quote">##FIRSTIMG##<br/> ##BQ##</blockquote><div class="posterous_quote_citation">via <a href="##URL##">##TITLE##</a> share from <a href="http://www.google.com/reader/shared/taktamur"my google reader</a></div></div>""")
+  val c = new Convert("""<div class="posterous_bookmarklet_entry"><blockquote class="posterous_long_quote">##FIRSTIMG##<br/> ##BQ##</blockquote><div class="posterous_quote_citation">via <a href="##URL##">##TITLE##</a> share from <a href="http://www.google.com/reader/shared/taktamur">my google reader</a></div></div>""")
   val mailler = Mailler.build(p)
   val postto = p.getProperty("posterous.post.mailto")
   posts.foreach( post => {
